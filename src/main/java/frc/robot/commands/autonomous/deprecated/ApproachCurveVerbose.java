@@ -68,7 +68,6 @@ public class ApproachCurveVerbose extends Command {
     public ApproachCurveVerbose() {
 		requires(Robot.drivetrain);
 		requires(Robot.camera);
-		requires(Robot.lineFollowers);
 
 		valueapproach = 0;
 		valuecenter = 0;

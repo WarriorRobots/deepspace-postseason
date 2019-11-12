@@ -10,17 +10,13 @@ package frc.robot.commands.autonomous.paths.routines;
 import edu.wpi.first.wpilibj.command.CommandGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.commands.autonomous.paths.AutoStraightDistance;
-import frc.robot.commands.elevator.HomeElevator;
-import frc.robot.commands.hatchplacer.LockScissors;
+import frc.robot.commands.autonomous.CameraStopAtDistance;
 
 public class Rocket extends CommandGroup {
   public Rocket(String autoname) {
-    addParallel(new RocketElevator()); // at the same time move the elevator up after 2 seconds
     addSequential(new RocketDrive(autoname)); // drive to the target and turn the correct direction
-    addSequential(new RocketPlace()); // drive with camera, place, and backup
+    addSequential(new CameraStopAtDistance(true),1.5); // if it overshoots and doesn't backup, it should just shoot
     addSequential(new AutoStraightDistance(-26));
-    addSequential(new LockScissors());
-    addSequential(new HomeElevator(),0.75); // bring elevator back down
   }
 
   @Override

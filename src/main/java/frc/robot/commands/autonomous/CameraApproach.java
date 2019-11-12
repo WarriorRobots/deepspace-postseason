@@ -28,7 +28,6 @@ public class CameraApproach extends Command {
     requires(Robot.drivetrain);
     requires(Robot.camera);
     requires(Robot.leds);
-    requires(Robot.lineFollowers);
 
     valueApproach = 0;
     valueCenter = 0;

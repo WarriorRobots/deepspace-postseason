@@ -69,7 +69,6 @@ public class ApproachCurve extends Command {
 	public ApproachCurve() {
 		requires(Robot.drivetrain);
 		requires(Robot.camera);
-		requires(Robot.lineFollowers);
 
 		valueapproach = 0;
 		valuecenter = 0;

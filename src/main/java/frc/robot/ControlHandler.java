@@ -5,32 +5,11 @@ import edu.wpi.first.wpilibj.GenericHID.Hand;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.buttons.JoystickButton;
-import frc.robot.commands.cargo.RunCargoPickupWheels;
-import frc.robot.commands.climb.AdjustClimbRelative;
-import frc.robot.commands.climb.MoveClimbTo;
-import frc.robot.commands.climb.SynchronizedClimb;
-import frc.robot.commands.debug.DebugLinearArmControl;
-import frc.robot.commands.debug.DebugLinearElevatorControl;
-import frc.robot.commands.cargo.ReverseCargoPickupWheels;
 import frc.robot.commands.debug.DebugRebootAll;
-import frc.robot.commands.debug.DebugResetClimbEncoder;
 import frc.robot.commands.autonomous.CameraApproach;
 import frc.robot.commands.autonomous.CameraStopAtDistance;
-import frc.robot.commands.cargo.FindArmZero;
-import frc.robot.commands.cargo.RetractArm;
-import frc.robot.commands.cargo.AdjustArmRelative;
-import frc.robot.commands.cargo.ExtendArm;
 import frc.robot.commands.drive.ArcadeDrive;
 import frc.robot.commands.drive.TurnLockDrive;
-import frc.robot.commands.elevator.MoveElevatorTo;
-import frc.robot.commands.elevator.HomeElevator;
-import frc.robot.commands.hatchpickup.ExtendHatchPickup;
-import frc.robot.commands.hatchpickup.RetractHatchPickup;
-import frc.robot.commands.hatchpickup.RunHatchPickupWheels;
-import frc.robot.commands.hatchplacer.LockScissors;
-import frc.robot.commands.hatchplacer.LockScissorsAndRaiseElevator;
-import frc.robot.commands.hatchplacer.LoosenScissors;
-import frc.robot.commands.hatchplacer.PlaceHatchOnVelcro;
 import frc.robot.util.triggers.DpadTrigger;
 import frc.robot.util.triggers.ThresholdTrigger;
 
@@ -116,44 +95,14 @@ public final class ControlHandler {
 		rightXboxJoyDown = new ThresholdTrigger(() -> -xbox.getY(Hand.kRight), -QuickAccessVars.XBOX_JOYSTICK_THRESHOLD,
 				false, () -> xbox.getStickButton(Hand.kRight));
 
-		leftJoyTriggerButton.whenPressed(new HomeElevator());
-		leftJoyButton3.whenPressed(new LockScissors());
-		leftJoyButton4.whenPressed(new PlaceHatchOnVelcro(QuickAccessVars.HATCH_LAUNCH_SAFETY));
-		leftJoyButton5.whenPressed(new MoveClimbTo(0));
-		leftJoyButton6.whenPressed(new SynchronizedClimb(QuickAccessVars.CLIMB_TARGET_HAB2));
 		// debug
 		leftJoyButton7.whenPressed(new DebugRebootAll());
-		leftJoyButton9.whenPressed(new FindArmZero());
-		leftJoyButton11.whenPressed(new AdjustArmRelative(QuickAccessVars.ARM_EMERGENCY_CLIMB_DELTA));
 		// leftJoyButton12.whenPressed(new AdjustClimbRelative(QuickAccessVars.CLIMB_DELTA));
 
 		rightJoyThumbButton.whileHeld(new ArcadeDrive());
-		// TODO Make sure turn lock is absolutely unnecessary, if so delete this
 		//rightJoyTriggerButton.whileHeld(new TurnLockDrive());
 		rightJoyTriggerButton.whileHeld(new CameraStopAtDistance(false));
-		rightJoyButton3.whenPressed(new ExtendArm(QuickAccessVars.ARM_PICKUP_CARGO_ANGLE));
 		rightJoyButton4.whileHeld(new CameraApproach());
-		rightJoyButton5.whenPressed(new ExtendArm(QuickAccessVars.ARM_CLIMB_ANGLE));
-		rightJoyButton6.whenPressed(new SynchronizedClimb(QuickAccessVars.CLIMB_TARGET_HAB3));
-
-		xboxL3.whileHeld(new DebugLinearElevatorControl(
-				() -> xbox.getY(Hand.kLeft) * QuickAccessVars.LINEAR_CONTROLS_MODIFIER * -1));
-		xboxR3.whileHeld(new DebugLinearArmControl(
-				() -> xbox.getY(Hand.kRight) * QuickAccessVars.LINEAR_CONTROLS_MODIFIER * -1));
-
-		xboxA.whenPressed(new MoveElevatorTo(QuickAccessVars.LVL1_HEIGHT));
-		xboxB.whenPressed(new MoveElevatorTo(QuickAccessVars.LVL2_HEIGHT));
-		xboxY.whenPressed(new MoveElevatorTo(QuickAccessVars.LVL3_HEIGHT));
-		xboxX.whenPressed(new MoveElevatorTo(QuickAccessVars.CARGO_BAY_HEIGHT));
-		rightXboxJoyUp.whenPressed(new ExtendHatchPickup());
-		rightXboxJoyDown.whenPressed(new RetractHatchPickup());
-		xboxSTART.whenPressed(new MoveElevatorTo(QuickAccessVars.ELEVATOR_CLIMB_HEIGHT_HAB3));
-		xboxSELECT.whenPressed(new RetractArm());
-		rightXboxTrigger.whileHeld(new RunHatchPickupWheels());
-		leftXboxTrigger.whileHeld(new RunCargoPickupWheels());
-		leftXboxBumper.whileHeld(new ReverseCargoPickupWheels());
-		xboxLeft.whenPressed(new LoosenScissors());
-		xboxRight.whenPressed(new LockScissorsAndRaiseElevator());
 	}
 
 	// -----------------------------------------------------------------//
