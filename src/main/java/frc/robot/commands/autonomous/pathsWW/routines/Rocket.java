@@ -5,11 +5,11 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-package frc.robot.commands.autonomous.paths.routines;
+package frc.robot.commands.autonomous.pathsWW.routines;
 
 import edu.wpi.first.wpilibj.command.CommandGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.commands.autonomous.paths.AutoStraightDistance;
+import frc.robot.commands.autonomous.pathsWW.AutoStraightDistance;
 import frc.robot.commands.autonomous.CameraStopAtDistance;
 
 public class Rocket extends CommandGroup {

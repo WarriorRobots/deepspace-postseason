@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.commands.debug.DebugRebootAll;
@@ -35,6 +36,7 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void robotPeriodic() {
+		drivetrain.onLoop(Timer.getFPGATimestamp());
 	}
 
 	@Override

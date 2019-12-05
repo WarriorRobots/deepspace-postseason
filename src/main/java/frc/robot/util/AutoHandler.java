@@ -1,8 +1,8 @@
 package frc.robot.util;
 
 import edu.wpi.first.wpilibj.command.Command;
-import frc.robot.commands.autonomous.paths.routines.Forwards;
-import frc.robot.commands.autonomous.paths.routines.Rocket;
+import frc.robot.commands.autonomous.pathsWW.routines.Forwards;
+import frc.robot.commands.autonomous.pathsWW.routines.Rocket;
 
 /**
  * Add your docs here.

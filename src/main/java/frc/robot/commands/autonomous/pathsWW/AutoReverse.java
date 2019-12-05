@@ -5,7 +5,7 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-package frc.robot.commands.autonomous.paths;
+package frc.robot.commands.autonomous.pathsWW;
 
 import edu.wpi.first.wpilibj.Notifier;
 import edu.wpi.first.wpilibj.command.Command;
@@ -13,21 +13,19 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.QuickAccessVars;
 import frc.robot.Robot;
 import frc.robot.subsystems.DrivetrainSubsystem;
-import frc.robot.util.AutoHandler;
 import jaci.pathfinder.Pathfinder;
 import jaci.pathfinder.PathfinderFRC;
 import jaci.pathfinder.Trajectory;
 import jaci.pathfinder.followers.EncoderFollower;
 
-public class AutoDrive extends Command {
+@Deprecated
+public class AutoReverse extends Command {
 
   private String k_path_name;
   private EncoderFollower m_left_follower, m_right_follower;
   private Notifier m_follower_notifier;
 
-  private double heading_difference;
-
-  public AutoDrive(String path_name) {
+  public AutoReverse(String path_name) {
     requires(Robot.drivetrain);
 
     k_path_name = path_name;
@@ -47,15 +45,15 @@ public class AutoDrive extends Command {
     m_right_follower = new EncoderFollower(right_trajectory);
 
     // Configure both followers to have the right encoder values and PIDVA values
-    m_left_follower.configureEncoder(Robot.drivetrain.getLeftEncoderClicks(), DrivetrainSubsystem.CLICKS_PER_REV, DrivetrainSubsystem.WHEEL_DIAMETER);
+    m_left_follower.configureEncoder(-Robot.drivetrain.getRightEncoderClicks(), DrivetrainSubsystem.CLICKS_PER_REV, DrivetrainSubsystem.WHEEL_DIAMETER);
     m_left_follower.configurePIDVA(QuickAccessVars.KP_LEFTAUTO, QuickAccessVars.KI_LEFTAUTO, QuickAccessVars.KD_LEFTAUTO, QuickAccessVars.KV_LEFTAUTO, QuickAccessVars.KA_LEFTAUTO);
 
-    m_right_follower.configureEncoder(Robot.drivetrain.getRightEncoderClicks(), DrivetrainSubsystem.CLICKS_PER_REV, DrivetrainSubsystem.WHEEL_DIAMETER);
+    m_right_follower.configureEncoder(-Robot.drivetrain.getLeftEncoderClicks(), DrivetrainSubsystem.CLICKS_PER_REV, DrivetrainSubsystem.WHEEL_DIAMETER);
     m_right_follower.configurePIDVA(QuickAccessVars.KP_RIGHTAUTO, QuickAccessVars.KI_RIGHTAUTO, QuickAccessVars.KD_RIGHTAUTO, QuickAccessVars.KV_RIGHTAUTO, QuickAccessVars.KA_RIGHTAUTO);
 
     // zero gyro so that it thinks it starts facing 0 like as described by the CSV path
     Robot.drivetrain.resetAngle();
-
+    
     // Create notifier to call followPath() to compute speeds and send them to the motor
     m_follower_notifier = new Notifier(this::followPath); // this::followPath tells it to call followPath
     m_follower_notifier.startPeriodic(left_trajectory.get(0).dt); // left_trajectory.get(0).dt is the Time Step from the Path Weaver Project
@@ -73,22 +71,19 @@ public class AutoDrive extends Command {
       double right_speed = m_right_follower.calculate(Robot.drivetrain.getRightEncoderClicks());
 
       // calculate desired amount to turn for motors
-      double heading = Robot.drivetrain.getAngleDegrees();
-      double desired_heading = Pathfinder.r2d(m_left_follower.getHeading());
+      double heading = (Robot.drivetrain.getAngleDegrees()+180)%360;
+      double desired_heading = -Pathfinder.r2d(m_left_follower.getHeading());
       // the value has a negative sign in front to fix the issue listed on the WPI Docs
       // https://wpilib.screenstepslive.com/s/currentCS/m/84338/l/1021631-integrating-path-following-into-a-robot-program#known-issue
-      //SmartDashboard.putNumber("Desired Heading", desired_heading); // XXX test
+      SmartDashboard.putNumber("Desired Heading", desired_heading); // XXX test
 
-      heading_difference = Pathfinder.boundHalfDegrees(desired_heading - heading);
-      //SmartDashboard.putNumber("Heading Difference", heading_difference); // XXX test
+      double heading_difference = Pathfinder.boundHalfDegrees(desired_heading - heading);
+      SmartDashboard.putNumber("Heading Difference", heading_difference); // XXX test
       double turn =  QuickAccessVars.KG_AUTO * heading_difference;
-      //SmartDashboard.putNumber("Auto motor Turn", turn); // XXX test
-
-      SmartDashboard.putNumber("Auto Left Speed", left_speed);
-      SmartDashboard.putNumber("Auto Right Speed", right_speed);
+      SmartDashboard.putNumber("Auto motor Turn", turn); // XXX test
 
       // drive the motors using the desired outputs for the motors combined with the amount it should turn
-      Robot.drivetrain.tankDriveRaw(left_speed/2.5 - turn, right_speed/2.5 + turn);
+      Robot.drivetrain.tankDriveRaw(left_speed + turn, right_speed - turn);
     }
   }
 
@@ -110,6 +105,5 @@ public class AutoDrive extends Command {
   protected void end() {
     m_follower_notifier.stop();
     Robot.drivetrain.stopDrive();
-    AutoHandler.getInstance().setLeftOver(heading_difference);
   }
 }

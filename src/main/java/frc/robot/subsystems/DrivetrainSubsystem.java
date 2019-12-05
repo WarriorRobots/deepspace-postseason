@@ -10,9 +10,17 @@ import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.command.Subsystem;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
+import frc.lib.control.Lookahead;
+import frc.lib.control.Path;
+import frc.lib.control.PathFollower;
+import frc.lib.geometry.Pose2d;
+import frc.lib.geometry.Twist2d;
+import frc.lib.util.DriveSignal;
 import frc.robot.Constants;
 import frc.robot.QuickAccessVars;
 import frc.robot.commands.drive.DefaultTankDrive;
+import frc.robot.util.Kinematics;
+import frc.robot.util.RobotState;
 
 /**
  * Contains the drivetrain, the encoders for the left and right wheels, and the NavX gyroscope.
@@ -38,11 +46,27 @@ public class DrivetrainSubsystem extends Subsystem {
 	private Encoder leftEnc, rightEnc;
 	private AHRS navx;
 
-	/** The robot wheel is {@value} inches in diameter. */
-	public static final double WHEEL_DIAMETER = 6.0;
+	private Path currentPath = null;
+	private PathFollower pathFollower;
+	private DriveControlStates currentDriveControlState;
 
 	/** A Grayhill encoder has {@value} clicks per revolution. */
 	public static final int CLICKS_PER_REV = 128;
+
+	/** The robot wheel is {@value} inches in diameter. */
+	public static final double WHEEL_DIAMETER = 6.0;
+
+	/** The robot wheel is {@value} inches in radius. */
+	public static final double WHEEL_RADIUS = WHEEL_DIAMETER / 2.0;
+
+	/** The distance between the left and right wheels is {@value} inches. */
+	public static final double TRACK_WIDTH = 26.0;
+	
+	/** The distance between the left and right wheels is {@value} meters. */
+	public static final double TRACK_WIDTH_METER = TRACK_WIDTH / 2.0 * 0.0254;
+	
+	/** The robot's track's scrub factor. (unitless) */
+    public static final double SCRUB_FACTOR = 1.0469745223; // XXX Change this from 254 to 2478 scrub factor
 
 	/**
 	 * The robot travels {@value} inches per encoder click.
@@ -92,6 +116,21 @@ public class DrivetrainSubsystem extends Subsystem {
 
 		leftEnc.setReverseDirection(QuickAccessVars.LEFT_DRIVE_ENCODER_REVERSED);
 		rightEnc.setReverseDirection(QuickAccessVars.RIGHT_DRIVE_ENCODER_REVERSED);
+
+		// Drive state starts out as Open loop, following driver commands or voltage commands
+		currentDriveControlState = DriveControlStates.OPEN_LOOP;
+	}
+
+	/**
+	 * Runs on the loop of the robot
+	 * @param timestamp Timestamp of the robot so it knows the match time.
+	 */
+	public void onLoop(double timestamp) {
+		synchronized (DrivetrainSubsystem.this) {
+			if (currentDriveControlState == DriveControlStates.PATH_FOLLOWING && currentPath != null) {
+				updatePathFollower(timestamp);
+			}
+		}
 	}
 
 	/**
@@ -151,6 +190,109 @@ public class DrivetrainSubsystem extends Subsystem {
 	 */
 	public void arcadeDriveRaw(double forwardSpeed, double turnSpeed) {
 		differentialDrive.arcadeDrive(forwardSpeed, turnSpeed, false);
+	}
+
+	/*----------------------------------------------------------------------------------*/
+	/* MIT License                                                                      */
+	/*                                                                                  */
+	/* Copyright (c) 2019 Team 254                                                      */
+	/*                                                                                  */
+	/* Permission is hereby granted, free of charge, to any person obtaining a copy     */
+	/* of this software and associated documentation files (the "Software"), to deal    */
+	/* in the Software without restriction, including without limitation the rights     */
+	/* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell        */
+	/* copies of the Software, and to permit persons to whom the Software is            */
+	/* furnished to do so, subject to the following conditions:                         */
+	/*                                                                                  */
+	/* The above copyright notice and this permission notice shall be included in all   */
+	/* copies or substantial portions of the Software.                                  */
+	/*                                                                                  */
+	/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR       */
+	/* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,         */
+	/* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE      */
+	/* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER           */
+	/* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,    */
+	/* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE    */
+	/* SOFTWARE.                                                                        */
+	/*----------------------------------------------------------------------------------*/
+
+	/**
+	 * Sets drivetrain to follow this path.
+     *
+	 * @see Path
+     */
+	/* (See liscence above) */
+    public synchronized void setWantDrivePath(Path path, boolean reversed) {
+        if (currentPath != path || currentDriveControlState != DriveControlStates.PATH_FOLLOWING) { // Warning: The commented out part may crash the robot
+            //RobotState.getInstance().resetDistanceDriven();
+            pathFollower = new PathFollower(path, reversed, new PathFollower.Parameters(
+                    new Lookahead(QuickAccessVars.kMinLookAhead, QuickAccessVars.kMaxLookAhead, QuickAccessVars.kMinLookAheadSpeed,
+                            QuickAccessVars.kMaxLookAheadSpeed),
+                    QuickAccessVars.kInertiaSteeringGain, QuickAccessVars.kPathFollowingProfileKp,
+                    QuickAccessVars.kPathFollowingProfileKi, QuickAccessVars.kPathFollowingProfileKv,
+                    QuickAccessVars.kPathFollowingProfileKffv, QuickAccessVars.kPathFollowingProfileKffa,
+                    QuickAccessVars.kPathFollowingProfileKs, QuickAccessVars.kPathFollowingMaxVel,
+                    QuickAccessVars.kPathFollowingMaxAccel, QuickAccessVars.kPathFollowingGoalPosTolerance,
+                    QuickAccessVars.kPathFollowingGoalVelTolerance, QuickAccessVars.kPathStopSteeringDistance));
+			currentDriveControlState = DriveControlStates.PATH_FOLLOWING;
+            currentPath = path;
+        } else {
+            stopDrive();
+        }
+	}
+
+	/**
+	 * @return True if the path is finished or true if the robot is not following a path.
+	 */
+	/* (See liscence above) */
+	public synchronized boolean isDoneWithPath() {
+        if (currentDriveControlState == DriveControlStates.PATH_FOLLOWING && pathFollower != null) {
+            return pathFollower.isFinished();
+        } else {
+            System.out.println("Robot is not in path following mode");
+            return true;
+        }
+    }
+
+	/**
+	 * Starts the process to end the path if following a path, otherwise does nothing.
+	 */
+	/* (See liscence above) */
+    public synchronized void forceDoneWithPath() {
+        if (currentDriveControlState == DriveControlStates.PATH_FOLLOWING && pathFollower != null) {
+            pathFollower.forceFinish();
+        } else {
+            System.out.println("Robot is not in path following mode");
+        }
+    }
+	
+	/**
+	 * Called every loop to update the path following for robot.
+	 * 
+	 * @param timestamp A timestamp that describes how long the robot has been on or describes the current time. (Used to find the difference in time.)
+	 */
+	/* (See liscence above) */
+	private void updatePathFollower(double timestamp) {
+        if (currentDriveControlState == DriveControlStates.PATH_FOLLOWING) {
+            RobotState robot_state = RobotState.getInstance();
+            Pose2d field_to_vehicle = robot_state.getLatestFieldToVehicle().getValue();
+            Twist2d command = pathFollower.update(timestamp, field_to_vehicle, robot_state.getDistanceDriven(),
+                    robot_state.getPredictedVelocity().dx);
+            if (!pathFollower.isFinished()) {
+                DriveSignal setpoint = Kinematics.inverseKinematics(command);
+                tankDriveRaw(setpoint.getLeft(), setpoint.getRight());
+            } else {
+                if (!pathFollower.isForceFinished()) {
+                    stopDrive();
+                }
+            }
+        } else {
+            DriverStation.reportError("drive is not in path following state", false);
+        }
+	}
+	
+	public void setOpen() {
+		currentDriveControlState = DriveControlStates.OPEN_LOOP;
 	}
 
 	/**
@@ -239,6 +381,11 @@ public class DrivetrainSubsystem extends Subsystem {
 		// builder.addDoubleProperty("left speed", () -> leftGroup.get(), null);
 		// builder.addDoubleProperty("right speed", () -> rightGroup.get(), null);
 		// builder.addDoubleProperty("angle", () -> getAngleDegrees(), null);
+	}
+
+	private enum DriveControlStates {
+		OPEN_LOOP, // following controls from driver or velocities
+		PATH_FOLLOWING, // following controls from path
 	}
 
 	@Override

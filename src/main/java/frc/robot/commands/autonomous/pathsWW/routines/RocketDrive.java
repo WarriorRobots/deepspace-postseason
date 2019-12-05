@@ -5,11 +5,11 @@
 /* the project.                                                               */
 /*----------------------------------------------------------------------------*/
 
-package frc.robot.commands.autonomous.paths.routines;
+package frc.robot.commands.autonomous.pathsWW.routines;
 
 import edu.wpi.first.wpilibj.command.CommandGroup;
-import frc.robot.commands.autonomous.paths.AutoCompleteTurn;
-import frc.robot.commands.autonomous.paths.AutoDrive;
+import frc.robot.commands.autonomous.pathsWW.AutoCompleteTurn;
+import frc.robot.commands.autonomous.pathsWW.AutoDrive;
 
 public class RocketDrive extends CommandGroup {
   /**
