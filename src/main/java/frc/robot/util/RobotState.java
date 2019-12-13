@@ -177,6 +177,7 @@ public class RobotState {
     public synchronized void addObservations(double timestamp, Twist2d displacement, Twist2d measured_velocity,
                                              Twist2d predicted_velocity) {
         distance_driven_ += displacement.dx;
+        SmartDashboard.putNumber("Distance driven", distance_driven_); // XXX Remove debug
         addFieldToVehicleObservation(timestamp,
                 Kinematics.integrateForwardKinematics(getLatestFieldToVehicle().getValue(), displacement));
         vehicle_velocity_measured_ = measured_velocity;

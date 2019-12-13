@@ -1,5 +1,6 @@
 package frc.lib.control;
 
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard; // XXX Remove import (when debug below is removed)
 import frc.lib.geometry.Pose2d;
 import frc.lib.geometry.Twist2d;
 import frc.lib.motion.MotionProfileConstraints;
@@ -125,6 +126,11 @@ public class PathFollower {
             mDebugOutput.steering_command_dx = steering_command.delta.dx;
             mDebugOutput.steering_command_dy = steering_command.delta.dy;
             mDebugOutput.steering_command_dtheta = steering_command.delta.dtheta;
+            // XXX remove debug
+            SmartDashboard.putNumber("Steering command dx", steering_command.delta.dx);
+            SmartDashboard.putNumber("Steering command dy", steering_command.delta.dy);
+            SmartDashboard.putNumber("Steering command dtheta", steering_command.delta.dtheta);
+            //
             mCrossTrackError = steering_command.cross_track_error;
             mLastSteeringDelta = steering_command.delta;
             mVelocityController.setGoalAndConstraints(
@@ -134,6 +140,10 @@ public class PathFollower {
                     new MotionProfileConstraints(Math.min(mMaxProfileVel, steering_command.max_velocity),
                             mMaxProfileAcc));
 
+            // XXX remove debug
+            SmartDashboard.putNumber("Remaining Path Length", steering_command.remaining_path_length);
+            SmartDashboard.putNumber("Stop Steering Distance", mStopSteeringDistance);
+            //
             if (steering_command.remaining_path_length < mStopSteeringDistance) {
                 doneSteering = true;
             }
@@ -182,6 +192,11 @@ public class PathFollower {
     }
 
     public boolean isFinished() {
+        // XXX remove debug
+        SmartDashboard.putBoolean("Steering Control", mSteeringController.isFinished());
+        SmartDashboard.putBoolean("Velocity Control Finished (points)", mVelocityController.isFinishedProfile());
+        SmartDashboard.putBoolean("Velocity Control Finished (position)", mVelocityController.onTarget());
+        //
         return (mSteeringController.isFinished() && mVelocityController.isFinishedProfile()
                 && mVelocityController.onTarget()) || overrideFinished;
     }

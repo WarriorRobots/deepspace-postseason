@@ -157,6 +157,7 @@ public final class QuickAccessVars {
 	/*----------------------------------------------------------------------------------*/
 
 	// Cheesypoof auto (See liscence above)
+	// TODO Change all values below to be appropriate for the 2478 drivetrain 
 	public static final double kMinLookAhead = 12.0; // inches
     public static final double kMinLookAheadSpeed = 12.0; // inches per second
     public static final double kMaxLookAhead = 48.0; // inches

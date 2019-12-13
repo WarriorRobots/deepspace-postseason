@@ -8,6 +8,9 @@ import edu.wpi.first.wpilibj.buttons.JoystickButton;
 import frc.robot.commands.debug.DebugRebootAll;
 import frc.robot.commands.autonomous.CameraApproach;
 import frc.robot.commands.autonomous.CameraStopAtDistance;
+import frc.robot.commands.autonomous.DrivePath;
+import frc.robot.commands.autonomous.EndPath;
+import frc.robot.commands.autonomous.paths.*;
 import frc.robot.commands.drive.ArcadeDrive;
 import frc.robot.commands.drive.TurnLockDrive;
 import frc.robot.util.triggers.DpadTrigger;
@@ -103,6 +106,8 @@ public final class ControlHandler {
 		//rightJoyTriggerButton.whileHeld(new TurnLockDrive());
 		rightJoyTriggerButton.whileHeld(new CameraStopAtDistance(false));
 		rightJoyButton4.whileHeld(new CameraApproach());
+		// rightJoyButton7.whenPressed(new DrivePath(new Hab1ToRocketNearPath(true), true)); // auto drive to right
+		rightJoyButton9.whenPressed(new EndPath());
 	}
 
 	// -----------------------------------------------------------------//

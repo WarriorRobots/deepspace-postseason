@@ -38,6 +38,7 @@ public class DrivePath extends Command {
   public DrivePath(PathContainer p, boolean stopWhenDone) {
     requires(Robot.drivetrain);
     mPathContainer = p;
+    mPath = mPathContainer.buildPath();
     mStopWhenDone = stopWhenDone;
   }
 
@@ -52,6 +53,7 @@ public class DrivePath extends Command {
   // Called just before this Command runs the first time
   @Override
   protected void initialize() {
+    Robot.drivetrain.setWantDrivePath(mPath, mPathContainer.isReversed());
   }
 
   // Called repeatedly when this Command is scheduled to run

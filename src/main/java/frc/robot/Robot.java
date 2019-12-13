@@ -4,6 +4,8 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.command.Scheduler;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import frc.robot.commands.autonomous.DrivePath;
+import frc.robot.commands.autonomous.paths.*;
 import frc.robot.commands.debug.DebugRebootAll;
 import frc.robot.subsystems.CameraSubsystem;
 import frc.robot.subsystems.LedControllerSubsystem;
@@ -11,6 +13,7 @@ import frc.robot.subsystems.DrivetrainSubsystem;
 import frc.robot.subsystems.PneumaticSubsystem;
 import frc.robot.util.AutoHandler;
 import frc.robot.util.DashboardHandler;
+import frc.robot.util.RobotStateEstimator;
 
 /**
  * Main class of the Robot.
@@ -36,7 +39,6 @@ public class Robot extends TimedRobot {
 
 	@Override
 	public void robotPeriodic() {
-		drivetrain.onLoop(Timer.getFPGATimestamp());
 	}
 
 	@Override
@@ -55,23 +57,34 @@ public class Robot extends TimedRobot {
 	@Override
 	public void autonomousInit() {
 		Scheduler.getInstance().removeAll();
-		AutoHandler.getInstance().selectCase();		
-		Scheduler.getInstance().add(AutoHandler.getInstance().getCase());
+		// AutoHandler.getInstance().selectCase();
+		// Scheduler.getInstance().add(AutoHandler.getInstance().getCase());
+		Scheduler.getInstance().add(new DrivePath(new GetOffHab2Path(),true));
+
+		RobotStateEstimator.getInstance().onStart(Timer.getFPGATimestamp());
 	}
 
 	@Override
 	public void autonomousPeriodic() {
 		Scheduler.getInstance().run();
+
+		RobotStateEstimator.getInstance().onLoop(Timer.getFPGATimestamp());
+		drivetrain.onLoop(Timer.getFPGATimestamp());
 	}
 
 	@Override
 	public void teleopInit() {
 		Scheduler.getInstance().removeAll();
+
+		RobotStateEstimator.getInstance().onStart(Timer.getFPGATimestamp());
 	}
 
 	@Override
 	public void teleopPeriodic() {
 		Scheduler.getInstance().run();
+		
+		RobotStateEstimator.getInstance().onLoop(Timer.getFPGATimestamp());
+		drivetrain.onLoop(Timer.getFPGATimestamp());
 	}
 
 	@Override

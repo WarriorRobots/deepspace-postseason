@@ -66,7 +66,7 @@ public class DrivetrainSubsystem extends Subsystem {
 	public static final double TRACK_WIDTH_METER = TRACK_WIDTH / 2.0 * 0.0254;
 	
 	/** The robot's track's scrub factor. (unitless) */
-    public static final double SCRUB_FACTOR = 1.0469745223; // XXX Change this from 254 to 2478 scrub factor
+    public static final double SCRUB_FACTOR = 1.0469745223; // TODO Change this from 254 to 2478 scrub factor
 
 	/**
 	 * The robot travels {@value} inches per encoder click.
@@ -74,6 +74,9 @@ public class DrivetrainSubsystem extends Subsystem {
 	// Diameter * PI = circumference
 	// circumference divided by clicks = distance per click.
 	public static final double INCHES_DRIVEN_PER_CLICK = (WHEEL_DIAMETER * Math.PI) / CLICKS_PER_REV;
+
+	private static int left_velocity_ticks_per_loop=0; // clicks/second
+	private static int right_velocity_ticks_per_loop=0; // clicks/second
 
 	/**
 	 * Instantiates new subsystem; make ONLY ONE.
@@ -131,6 +134,12 @@ public class DrivetrainSubsystem extends Subsystem {
 				updatePathFollower(timestamp);
 			}
 		}
+
+		// the 1.0 was originally a 10 but is a 1 because it is unessecary to be a 10 as the cancelation of it is no longer present.
+		left_velocity_ticks_per_loop = (int) (leftEnc.getRate()
+                / (1.0 * leftEnc.getDistancePerPulse())); // clicks/second
+        right_velocity_ticks_per_loop = (int) (rightEnc.getRate()
+                / (1.0 * rightEnc.getDistancePerPulse())); // clicks/second
 	}
 
 	/**
@@ -223,8 +232,8 @@ public class DrivetrainSubsystem extends Subsystem {
      */
 	/* (See liscence above) */
     public synchronized void setWantDrivePath(Path path, boolean reversed) {
-        if (currentPath != path || currentDriveControlState != DriveControlStates.PATH_FOLLOWING) { // Warning: The commented out part may crash the robot
-            //RobotState.getInstance().resetDistanceDriven();
+        if (currentPath != path || currentDriveControlState != DriveControlStates.PATH_FOLLOWING) {
+            RobotState.getInstance().resetDistanceDriven();
             pathFollower = new PathFollower(path, reversed, new PathFollower.Parameters(
                     new Lookahead(QuickAccessVars.kMinLookAhead, QuickAccessVars.kMaxLookAhead, QuickAccessVars.kMinLookAheadSpeed,
                             QuickAccessVars.kMaxLookAheadSpeed),
@@ -314,6 +323,34 @@ public class DrivetrainSubsystem extends Subsystem {
 	 */
 	public int getRightEncoderClicks() {
 		return rightEnc.get();
+	}
+
+	/**
+	 * Returns double value of left encoder in terms of inches.
+	 */
+	public double getLeftEncoderInches() {
+		return leftEnc.get() * INCHES_DRIVEN_PER_CLICK;
+	}
+
+	/**
+	 * Returns double value of right encoder in terms of inches.
+	 */
+	public double getRightEncoderInches() {
+		return rightEnc.get() * INCHES_DRIVEN_PER_CLICK;
+	}
+
+	/**
+	 * Returns a double value of the speed of the left side in inches/second.
+	 */
+	public double getLeftLinearVelocity() {
+		return INCHES_DRIVEN_PER_CLICK * left_velocity_ticks_per_loop; // inches/click * clicks/second = inches/second
+	}
+
+	/**
+	 * Returns a double value of the speed of the right side in inches/second.
+	 */
+	public double getRightLinearVelocity() {
+		return INCHES_DRIVEN_PER_CLICK * right_velocity_ticks_per_loop; // inches/click * clicks/second = inches/second
 	}
 
 	/**
